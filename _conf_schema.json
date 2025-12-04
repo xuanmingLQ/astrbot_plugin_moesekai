@@ -1,31 +1,73 @@
 {
-  "cache_duration": {
-    "description": "预测图片缓存时长（秒）",
-    "type": "int",
-    "default": 300
+  "sekairanking":{
+    "description": "sekairanking配置",
+    "type": "object",
+    "items":{
+      "cache_duration": {
+        "description": "预测图片缓存时长（秒）",
+        "type": "int",
+        "default": 300
+      },
+      "base_url":{
+        "description": "要访问的目标网页",
+        "type": "string",
+        "default": "https://sekairanking.exmeaning.com"
+      },
+      "page_size":{
+        "description":"网页的大小，影响截图的清晰度，两个元素分别为长和宽",
+        "type": "list",
+        "default": [ 1920, 1080 ]
+      },
+      "timeout":{
+        "description": "访问网页时的超时时长（秒）",
+        "type": "int",
+        "default": 60
+      },
+      "all_ranks":{
+        "description": "可以查看的排名",
+        "type": "list",
+        "default":  [
+            50, 100, 200, 300, 400, 500,
+            1000, 2000, 3000, 4000, 5000,
+            10000
+        ]
+      }
+    },
+    "default": {
+      "cache_duration":300,
+      "base_url": "https://sekairanking.exmeaning.com",
+      "page_size": [ 1920, 1080 ],
+      "timeout": 60,
+      "all_ranks":  [
+            50, 100, 200, 300, 400, 500,
+            1000, 2000, 3000, 4000, 5000,
+            10000
+        ]
+    }
   },
-  "base_url":{
-    "description": "要访问的目标网页",
-    "type": "string",
-    "default": "https://sekairanking.exmeaning.com"
-  },
-  "page_size":{
-    "description":"网页的大小，影响截图的清晰度，两个元素分别为长和宽",
-    "type": "list",
-    "default": [ 1920, 1080 ]
-  },
-  "timeout":{
-    "description": "访问网页时的超时时长（秒）",
-    "type": "int",
-    "default": 60
-  },
-  "all_ranks":{
-    "description": "可以查看的排名",
-    "type": "list",
-    "default":  [
-        50, 100, 200, 300, 400, 500,
-        1000, 2000, 3000, 4000, 5000,
-        10000
-    ]
+  "sekaiprofile":{
+    "description": "sekaiprofile配置",
+    "type": "object",
+    "items": {
+      "base_url": {
+        "description": "要访问的目标网页",
+        "type": "string",
+        "default": "https://sekaiprofile.exmeaning.com/profile/{user_id}?token={token}"
+      },
+      "token": {
+        "description": "snowy的token",
+        "type": "string"
+      },
+      "allow_regions":{
+        "description": "支持的服务器",
+        "type": "list",
+        "default": ["cn"]
+      }
+    },
+    "default": {
+      "base_url": "https://sekaiprofile.exmeaning.com/profile/{user_id}?token={token}",
+      "token": "",
+      "allow_regions": ["cn"]
+    }
   }
 }
