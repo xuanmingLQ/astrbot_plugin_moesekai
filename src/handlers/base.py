@@ -48,6 +48,7 @@ class CmdHandler:
         self.commands = self._normalize_commands(commands)
         self.handler_func: Callable[[HandlerContext], Any] | None = None
         CmdHandler._handlers.append(self)
+        print(f"注册指令 {commands[0]}")
 
     @staticmethod
     def _normalize_spaces(text: str) -> str:
@@ -116,12 +117,16 @@ async def _iter_results(result: Any):
 
 async def dispatch_event(event: AstrMessageEvent):
     """在已注册处理器中分发事件。"""
+    logger.debug(event.get_message_str())
     message = event.get_message_str().strip()
+    logger.debug(message)
     if not message.startswith("/"):
         return
 
     missing_prefix_hint: str | None = None
+    logger.debug(CmdHandler._handlers)
     for handler in list(CmdHandler._handlers):
+        logger.debug(handler.commands)
         ctx = handler.parse_context(event)
         if ctx is None:
             if missing_prefix_hint is None:
@@ -142,6 +147,6 @@ async def dispatch_event(event: AstrMessageEvent):
             logger.error(f"指令处理失败: {e}", exc_info=True)
             yield event.plain_result(f"指令处理失败: {e}")
         return
-
+    logger.debug(missing_prefix_hint)
     if missing_prefix_hint:
         yield event.plain_result(missing_prefix_hint)

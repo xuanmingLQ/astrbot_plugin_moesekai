@@ -7,9 +7,10 @@ from astrbot.api.event import AstrMessageEvent
 from ..config import get_global_config, Config
 from .base import CmdHandler, HandlerContext
 from ..utils.lifecycle import on_initialize
+from astrbot.api import logger
 
 config: Config | None = None
-@on_initialize
+@on_initialize()
 def initialize_sekai():
     global config
     config = get_global_config()
@@ -30,6 +31,7 @@ class SekaiCmdHandler(CmdHandler):
         prefix_args: list[str] | None = None,
         regions: list[str] | None = None,
     ):
+        print(f"注册 sekai 指令 {commands[0]}")
         self.prefix_args = self._normalize_prefix_args(prefix_args or [""])
         self.limit_regions = [str(r).lower().strip() for r in (regions or []) if str(r).strip()]
         super().__init__(commands)
