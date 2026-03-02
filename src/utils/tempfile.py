@@ -6,10 +6,20 @@ from uuid import uuid4
 import glob
 import shutil
 from astrbot.api import logger
-from task import repeat_with_interval
+from .task import repeat_with_interval
+from ..config import get_global_config, Config
+from .lifecycle import on_initialize
 
 
 TEMP_FILE_DIR =  'data/utils/tmp'
+config: Config | None = None
+
+@on_initialize(order=20)
+def initialize_tempfile():
+    global TEMP_FILE_DIR, config
+    config = get_global_config()
+    TEMP_FILE_DIR = pjoin(config.data_path, "tmp")
+
 _tmp_files_to_remove: list[Tuple[str, datetime]] = []
 
 

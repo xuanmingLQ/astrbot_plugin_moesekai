@@ -1,4 +1,14 @@
 {
+  "data_path":{
+    "description": "保存的文件地址",
+    "type": "string",
+    "default": "data/plugin_data/moesekai"
+  },
+  "file_db_save_interval":{
+    "description": "文件数据保存间隔（秒）",
+    "type": "int",
+    "default": 5
+  },
   "sekairanking":{
     "description": "sekairanking配置",
     "type": "object",
@@ -6,17 +16,17 @@
       "cache_duration": {
         "description": "预测图片缓存时长（秒）",
         "type": "int",
-        "default": 300
+        "default": 1800
       },
       "base_url":{
-        "description": "要访问的目标网页",
+        "description": "目标网址",
         "type": "string",
         "default": "https://sekairanking.exmeaning.com"
       },
       "page_size":{
-        "description":"网页的大小，影响截图的清晰度，两个元素分别为长和宽",
+        "description":"网页的大小，影响截图的清晰度，两个元素分别为宽度和高度",
         "type": "list",
-        "default": [ 1920, 1080 ]
+        "default": [ 1080, 1080 ]
       },
       "timeout":{
         "description": "访问网页时的超时时长（秒）",
@@ -31,18 +41,24 @@
             1000, 2000, 3000, 4000, 5000,
             10000
         ]
+      },
+      "allow_regions":{
+        "description": "支持的服务器",
+        "type": "list",
+        "default": ["cn", "jp"]
       }
     },
     "default": {
       "cache_duration":300,
       "base_url": "https://sekairanking.exmeaning.com",
-      "page_size": [ 1920, 1080 ],
+      "page_size": [ 1080, 1080 ],
       "timeout": 60,
       "all_ranks":  [
             50, 100, 200, 300, 400, 500,
             1000, 2000, 3000, 4000, 5000,
             10000
-        ]
+        ],
+      "allow_regions": ["cn", "jp"]
     }
   },
   "sekaiprofile":{
@@ -52,22 +68,57 @@
       "base_url": {
         "description": "要访问的目标网页",
         "type": "string",
-        "default": "https://sekaiprofile.exmeaning.com/profile/{user_id}?token={token}"
+        "default": "https://sekaiprofile.exmeaning.com/profile/{region}/{user_id}?token={token}&mode=screenshot"
       },
       "token": {
         "description": "snowy的token",
         "type": "string"
       },
-      "allow_regions":{
-        "description": "支持的服务器",
-        "type": "list",
-        "default": ["cn"]
+      "bind_limit":{
+        "description": "绑定限制",
+        "type": "object",
+        "items":{
+          "cn":{
+            "description": "国服",
+            "type": "int",
+            "default": 3
+          },
+          "jp":{
+            "description": "日服",
+            "type": "int",
+            "default": 3
+          },
+          "tw":{
+            "description": "台服",
+            "type": "int",
+            "default": 0
+          },
+          "en":{
+            "description": "国际服",
+            "type": "int",
+            "default": 0
+          },
+          "kr":{
+            "description": "韩服",
+            "type": "int",
+            "default": 0
+          }
+        },
+        "default": {
+          "cn": 3,
+          "jp": 3
+        }
       }
     },
     "default": {
       "base_url": "https://sekaiprofile.exmeaning.com/profile/{user_id}?token={token}",
       "token": "",
-      "allow_regions": ["cn"]
+      "bind_limit": {"cn":3,"jp":3}
     }
+  },
+  "regions":{
+    "description": "pjsk服务器配置",
+    "type": "object",
+    "items":{}
   }
 }
