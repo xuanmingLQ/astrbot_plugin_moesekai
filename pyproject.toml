@@ -1,7 +1,7 @@
 [project]
-name = "sekairanking"
-version = "0.1.0"
-description = "Add your description here"
+name = "moesekai"
+version = "0.0.0"
+description = "访问moesekai截图的插件"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
