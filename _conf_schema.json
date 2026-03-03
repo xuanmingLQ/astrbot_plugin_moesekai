@@ -9,6 +9,11 @@
     "type": "int",
     "default": 5
   },
+  "regions":{
+    "description": "所有区服",
+    "type":"list",
+    "default": ["cn", "jp"]
+  },
   "sekairanking":{
     "description": "sekairanking配置",
     "type": "object",
@@ -115,10 +120,5 @@
       "token": "",
       "bind_limit": {"cn":3,"jp":3}
     }
-  },
-  "regions":{
-    "description": "pjsk服务器配置",
-    "type": "object",
-    "items":{}
   }
 }

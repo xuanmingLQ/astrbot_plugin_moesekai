@@ -27,6 +27,7 @@ class SekaiProfile:
 class Config(AstrBotConfig):
     data_path: str = "data/plugin_data/moesekai"
     file_db_save_interval: int = 5
+    regions: list = ['cn', 'jp']
     sekairanking: SekaiRanking
     sekaiprofile: SekaiProfile
 

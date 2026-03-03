@@ -32,7 +32,7 @@ def start_repeat_with_interval(
         await asyncio.sleep(delay)
         try:
             error_count = 0
-            logger.info(f'开始循环执行 {name} 任务', flush=True)
+            logger.info(f'开始循环执行 {name} 任务')
             next_time = datetime.now() + timedelta(seconds=1)
             while True:
                 now_time = datetime.now()
