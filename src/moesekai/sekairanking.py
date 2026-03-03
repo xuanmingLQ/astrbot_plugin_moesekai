@@ -14,6 +14,7 @@ sekairanking_lock: asyncio.Lock = asyncio.Lock()
 config: Config | None = None
 @on_initialize()
 def initialize_sekai_ranking():
+    print("init ranking")
     global config
     config = get_global_config()
 
@@ -72,8 +73,8 @@ async def screenshot_sekairanking_page(ctx: HandlerContext, screenshot_path: str
         )
         await page.screenshot(path=screenshot_path, full_page=True)
 
-print("注册skp指令")
 
+print("注册skp指令")
 pjsk_skp = SekaiCmdHandler(
     [
         "/pjsk sk predict",

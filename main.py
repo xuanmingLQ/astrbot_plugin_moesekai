@@ -5,7 +5,7 @@ from astrbot.api.star import Context, Star, register
 from .src.config import set_global_config
 from .src.handlers import dispatch_event
 from .src.utils.lifecycle import run_initialize_hooks, run_terminate_hooks
-
+from .src.moesekai import *
 
 @register("moesekai", "xmlq", "访问moesekai并截图", "0.0.1")
 class MoesekaiPlugin(Star):
