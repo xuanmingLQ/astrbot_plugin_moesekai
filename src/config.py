@@ -1,43 +1,43 @@
-from astrbot.api import AstrBotConfig
-from dataclasses import dataclass, field
-from typing import cast
+from astrbot.api import AstrBotConfig, logger
+from pydantic import BaseModel
 
-@dataclass
-class SekaiRanking:
+class SekaiRanking(BaseModel):
     base_url: str = "https://sekairanking.exmeaning.com"
     cache_duration: int = 1800
     page_size: tuple | list = (1080,1080)
     timeout: int = 60
-    all_ranks: list = field(
-        default_factory=lambda: [
+    all_ranks: list =  [
             50, 100, 200, 300, 400, 500,
             1000, 2000, 3000, 4000, 5000,
             10000,
-        ],
-    )
-    allow_regions: list = field(default_factory=lambda: ["cn"])
+        ]
+    allow_regions: list = ["cn", "jp"]
 
-@dataclass
-class SekaiProfile:
+class SekaiProfile(BaseModel):
     base_url: str = "https://sekaiprofile.exmeaning.com/profile/{user_id}?token={token}"
     token: str = ""
-    bind_limit: dict = field(default_factory=dict)
+    bind_limit: dict = {"cn":3,"jp":3}
     
-
-class Config(AstrBotConfig):
+class Config(BaseModel):
     data_path: str = "data/plugin_data/moesekai"
     file_db_save_interval: int = 5
     regions: list = ['cn', 'jp']
-    sekairanking: SekaiRanking
-    sekaiprofile: SekaiProfile
+    sekairanking: SekaiRanking = SekaiRanking()
+    sekaiprofile: SekaiProfile = SekaiProfile()
 
 
-global_config: Config | None = None
-
+global_config: Config = Config()
 
 def set_global_config(config: AstrBotConfig) -> None:
     global global_config
-    global_config = cast(Config, config)
+    try:
+        # model_validate 可以接受 dict 或者对象
+        # 它会自动将嵌套的字典转换为 SekaiRanking 和 SekaiProfile 实例
+        global_config = Config.model_validate(config)
+    except Exception as e:
+        # 处理验证失败的情况
+        logger.error(f"配置加载失败: {e}")
+        raise
 
 
 def get_global_config() -> Config:

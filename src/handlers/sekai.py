@@ -51,6 +51,7 @@ class SekaiCmdHandler(CmdHandler):
         commands: list[str],
         regions: list[str] | None = None,
         prefix_args: list[str] | None = None,
+        parse_uid_arg: bool = True
     ):
         logger.debug(f"注册 sekai 指令 {commands[0]}")
         self.available_regions = regions or config.regions
@@ -64,6 +65,7 @@ class SekaiCmdHandler(CmdHandler):
                     all_region_commands.append(cmd.replace("/", f"/{prefix}"))
                     all_region_commands.append(cmd.replace("/", f"/{region}{prefix}"))
         self.original_commands = commands
+        self.parse_uid_arg = parse_uid_arg
         super().__init__(all_region_commands)
 
     async def additional_context_process(self, context: HandlerContext):

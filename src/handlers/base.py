@@ -243,6 +243,7 @@ async def dispatch_event(event: AstrMessageEvent):
             continue
         cmd_starts.sort(key=lambda x:x[1])
         context.trigger_cmd = cmd_starts[0][0]
+        context.arg_text = plain_text[cmd_starts[0][1] + len(context.trigger_cmd):]
         ctx = await handler.additional_context_process(context)
         if ctx is None:
             if missing_prefix_hint is None:

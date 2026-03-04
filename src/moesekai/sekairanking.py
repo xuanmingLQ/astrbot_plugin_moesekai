@@ -30,6 +30,7 @@ def initialize_sekai_ranking():
             "/预测",
         ],
         prefix_args=["", "wl"],
+        parse_uid_arg=False,
     )
     @pjsk_skp.handle()
     async def _(ctx):
