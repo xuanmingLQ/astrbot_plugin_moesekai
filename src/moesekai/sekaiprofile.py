@@ -9,10 +9,20 @@ from ..utils.bind import get_player_bind_id
 import os
 
 config: Config | None = None
-@on_initialize()
+@on_initialize(101)
 def initialize_sekai_ranking():
     global config
     config = get_global_config()
+    
+    _profile_handle = SekaiCmdHandler(
+        ["个人信息", "grxx", "profile"]
+    )
+    @_profile_handle.handle()
+    async def _(ctx):
+        uid = get_player_bind_id(ctx)
+        async for result in get_sekaiprofile_img(ctx=ctx, uid=uid):
+            yield result
+
 # 获取个人信息截图
 async def get_sekaiprofile_img(ctx: HandlerContext, uid: str):
     allow_regions:list[str] = config.sekaiprofile.bind_limit.keys()
@@ -36,11 +46,3 @@ async def get_sekaiprofile_img(ctx: HandlerContext, uid: str):
         except Exception as e:
             raise Exception("下载个人信息页面失败")
     pass
-_profile_handle = SekaiCmdHandler(
-    ["个人信息", "grxx", "profile"]
-)
-@_profile_handle.handle()
-async def _(ctx):
-    uid = get_player_bind_id(ctx)
-    async for result in get_sekaiprofile_img(ctx=ctx, uid=uid):
-        yield result
