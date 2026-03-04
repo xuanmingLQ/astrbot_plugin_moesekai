@@ -5,9 +5,11 @@ from dataclasses import dataclass
 from astrbot.api.event import AstrMessageEvent
 
 from ..config import get_global_config, Config
-from .base import CmdHandler, HandlerContext
+from .base import CmdHandler, HandlerContext, assert_and_reply
 from ..utils.lifecycle import on_initialize
 from astrbot.api import logger
+
+import re
 
 config: Config | None = None
 @on_initialize()
@@ -21,6 +23,25 @@ class _CommandMatch:
     matched_trigger: str
     args: str
 
+@dataclass
+class SekaiHandlerContext(HandlerContext):
+    region: str = None
+    original_trigger_cmd: str = None
+    create_from_region: bool = False
+    prefix_arg: str = None
+    uid_arg: str = None
+
+    @classmethod
+    def from_region(cls, region: str) -> 'SekaiHandlerContext':
+        ctx = SekaiHandlerContext()
+        ctx.region = region
+        ctx.create_from_region = True
+        ctx.prefix_arg = None
+        return ctx
+    
+    def block_region(self, key="", timeout=3*60, err_msg: str = None):
+        if not self.create_from_region:
+            return self.block(f"{self.region}_{key}", timeout=timeout, err_msg=err_msg)
 
 class SekaiCmdHandler(CmdHandler):
     """支持sekai命令处理器。"""
@@ -28,50 +49,78 @@ class SekaiCmdHandler(CmdHandler):
     def __init__(
         self,
         commands: list[str],
-        prefix_args: list[str] | None = None,
         regions: list[str] | None = None,
+        prefix_args: list[str] | None = None,
     ):
-        print(f"注册 sekai 指令 {commands[0]}")
-        self.prefix_args = self._normalize_prefix_args(prefix_args or [""])
-        self.limit_regions = [str(r).lower().strip() for r in (regions or []) if str(r).strip()]
-        super().__init__(commands)
+        logger.debug(f"注册 sekai 指令 {commands[0]}")
+        self.available_regions = regions or config.regions
+        self.prefix_args = sorted(prefix_args or [''], key=lambda x: len(x), reverse=True)
+        all_region_commands = []
+        for prefix in self.prefix_args:
+            for region in self.available_regions:
+                for cmd in commands:
+                    assert not cmd.startswith(f"/{region}{prefix}")
+                    all_region_commands.append(cmd)
+                    all_region_commands.append(cmd.replace("/", f"/{prefix}"))
+                    all_region_commands.append(cmd.replace("/", f"/{region}{prefix}"))
+        self.original_commands = commands
+        super().__init__(all_region_commands)
 
-    @classmethod
-    def _normalize_prefix_args(cls, prefix_args: list[str]) -> list[str]:
-        normalized = []
-        for item in prefix_args:
-            value = cls._normalize_spaces(item).replace(" ", "")
-            if value.startswith("/"):
-                value = value[1:]
-            normalized.append(value)
-        normalized = list(dict.fromkeys(normalized))
-        if "" not in normalized:
-            normalized.append("")
-        normalized.sort(key=len, reverse=True)
-        return normalized
-
-    def _get_regions(self) -> list[str]:
-        allow_regions = [str(x).lower().strip() for x in config.sekairanking.allow_regions if str(x).strip()]
-        if self.limit_regions:
-            allow_regions = [r for r in allow_regions if r in self.limit_regions]
-        allow_regions = list(dict.fromkeys(allow_regions))
-        allow_regions.sort(key=len, reverse=True)
-        return allow_regions
-
-    def _extract_region(self, body: str, regions: list[str]) -> tuple[str | None, str]:
-        first, _, rest = body.partition(" ")
-        first_cf = first.casefold()
-        for region in regions:
-            if first_cf == region.casefold():
-                return region, rest.strip()
-
-        body_cf = body.casefold()
-        for region in regions:
-            if body_cf.startswith(region.casefold()):
-                remaining = body[len(region):].strip()
-                if remaining:
-                    return region, remaining
-        return None, ""
+    async def additional_context_process(self, context: HandlerContext):
+        cmd_region = None
+        original_trigger_cmd = context.trigger_cmd
+        for region in config.regions:
+            if context.trigger_cmd.strip().startswith(f"/{region}"):
+                cmd_region = region
+                context.trigger_cmd = context.trigger_cmd.replace(f"/{region}", "/")
+                break
+        assert_and_reply(
+            cmd_region in self.available_regions, 
+            f"该指令不支持 {cmd_region} 服务器，可用的服务器有: {', '.join(self.available_regions)}"
+        )
+        prefix_arg = None
+        for prefix in self.prefix_args:
+            if context.trigger_cmd.startswith(f"/{prefix}"):
+                prefix_arg = prefix
+                context.trigger_cmd = context.trigger_cmd.replace(f"/{prefix}", "/")
+                break
+        # 处理账号指定参数
+        args = context.get_args()
+        uid_arg = None
+        if self.parse_uid_arg:
+            # 匹配 u数字 并且前一个字母不能是m
+            index_match = re.search(r'(?<!m)u(\d{1,2})', args)
+            if index_match:
+                uid_arg = f"u{index_match.group(1)}"
+                args = args.replace(index_match.group(0), '', 1).strip()
+            # 匹配游戏id
+            uid_match = re.search(r'(\d{14,20})', args)
+            if uid_match:
+                uid_arg = uid_match.group(1)
+                args = args.replace(uid_match.group(0), '', 1).strip()
+            # 匹配 @QQ号
+            qq_match = re.search(r'@(\d{9,13})', args)
+            if qq_match:
+                uid_arg = f"@{qq_match.group(1)}"
+                args = args.replace(qq_match.group(0), '', 1).strip()
+            # 匹配 at用户
+            for seg in context.get_msg():
+                seg = seg.toDict()
+                stype, sdata = seg['type'], seg.get('data', {})
+                if stype == "at" and sdata.get('qq'):
+                    uid_arg = f"@{sdata['qq']}"
+                    break
+        context.handler = self
+        params = context.__dict__.copy()
+        params['arg_text'] = args
+        params['region'] = cmd_region
+        params['original_trigger_cmd'] = original_trigger_cmd
+        params['create_from_region'] = False
+        params['prefix_arg'] = prefix_arg
+        params['uid_arg'] = uid_arg
+        params['handler'] = self
+        return SekaiHandlerContext(**params)
+    
 
     @staticmethod
     def _is_command_head(text: str, command: str) -> bool:
@@ -97,7 +146,9 @@ class SekaiCmdHandler(CmdHandler):
         return None
 
     def parse_context(self, event: AstrMessageEvent) -> HandlerContext | None:
+        super().parse_context(event)
         message = self._normalize_spaces(event.get_message_str())
+        logger.debug(message)
         if not message.startswith("/"):
             return None
         
@@ -108,7 +159,7 @@ class SekaiCmdHandler(CmdHandler):
         regions = self._get_regions()
         if not regions:
             return None
-
+        logger.debug(regions)
         region, rest = self._extract_region(body, regions)
         if not region:
             return None
