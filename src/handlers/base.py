@@ -233,14 +233,17 @@ async def dispatch_event(event: AstrMessageEvent):
     for handler in list(CmdHandler._handlers):
         logger.debug(handler.commands)
         cmd_starts = []
+        # TODO 需要做更好的指令解析
         for cmd in sorted(handler.commands, key = len, reverse=True):
             start = plain_text.find(cmd)
-            cmd_starts.append((cmd, start if start != -1 else float('inf')))
+            if start != -1:
+                cmd_starts.append((cmd, start))
         logger.debug(cmd_starts)
         if len(cmd_starts)<=0:
             continue
         cmd_starts.sort(key=lambda x:x[1])
-        ctx = handler.additional_context_process(context)
+        context.trigger_cmd = cmd_starts[0][0]
+        ctx = await handler.additional_context_process(context)
         if ctx is None:
             if missing_prefix_hint is None:
                 missing_prefix_hint = handler.get_prefix_hint(event)

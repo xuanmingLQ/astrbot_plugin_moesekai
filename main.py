@@ -21,6 +21,6 @@ class MoesekaiPlugin(Star):
     async def _(self, event: AstrMessageEvent):
         async for result in dispatch_event(event):
             yield result
-
+    
     async def terminate(self):
         await run_terminate_hooks()
